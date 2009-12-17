@@ -15,7 +15,7 @@ package org.flexunit.runner.cases
 	{
 		protected var description:Description;
 		
-		//At least three differnt types of tests need to be written for the Descirption class: one that uses the normal description 
+		//At least three differnt types of tests need to be written for the Description class: one that uses the normal description 
 		//constructor, one that uses the createTestDescription static method, and one that uses the createSuiteDescription static method
 				
 		[Before]

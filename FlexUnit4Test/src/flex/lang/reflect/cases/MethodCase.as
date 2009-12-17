@@ -128,9 +128,6 @@ package flex.lang.reflect.cases
 			Assert.assertTrue( method.hasMetaData("Test") );
 		} 
 
-		/*
-		* not sure how to test
-		*/
 		[Test(description="ensure that the proper metadata is pulled using getMetaData")]
 		public function check_get_one_getMetaData():void {
 			var methodXML:XML = <method name="myMethod" declaredBy="flex.lang.reflect.cases::MethodCase" returnType="void"> 
@@ -147,6 +144,7 @@ package flex.lang.reflect.cases
 			var metaDataArg:MetaDataArgument = metadata.getArgument( "description" );
 
 			Assert.assertEquals( "Test", metadata.name );
+			Assert.assertEquals( "description", metaDataArg.key );
 			Assert.assertEquals( "my description", metaDataArg.value );
 		}
 		

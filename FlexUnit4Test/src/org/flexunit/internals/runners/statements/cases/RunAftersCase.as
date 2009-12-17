@@ -9,7 +9,6 @@ package org.flexunit.internals.runners.statements.cases
 
 	public class RunAftersCase
 	{
-		//TODO: Ensure that these tests and this test case are properly designed
 		
 		protected var runAfters:RunAfters;
 		protected var frameworkMethodMock:FrameworkMethodMock;

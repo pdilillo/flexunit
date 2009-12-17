@@ -44,10 +44,10 @@ package flexUnitTests.flexUnit4.suites.frameworkSuite.theorySuite {
 
   		[Theory]
 		public function testIntOnly( value:int ):void {
-			assumeThat( value, lessThan( 10 ) );
-			assertThat( value, instanceOf(int) );
 			// test which involves int value	
 			//trace( "      int case " + value );
+			assumeThat( value, lessThan( 10 ) );
+			assertThat( value, instanceOf(int) );
 		}		
 
    		[Theory]
@@ -58,8 +58,16 @@ package flexUnitTests.flexUnit4.suites.frameworkSuite.theorySuite {
 		} 		
 
   		[Theory]
-		public function testStringIntCombo( boolValue:Boolean, stringValue:String ):void {
-			//trace( boolValue + " " + stringValue );
+		public function testStringIntCombo( intValue:int, stringValue:String ):void {
+			// test which involves both int and string values
+			assumeThat( intValue, lessThan( 10 ) );
+			assertThat( stringValue, instanceOf( String ) );
+		} 	
+
+		[Theory]
+		public function testBoolOnly( value : Boolean ):void {
+			// test which involves Boolean values
+			assertThat( value, instanceOf( Boolean ) );
 		} 	
 
 		public function TheorySuite():void {

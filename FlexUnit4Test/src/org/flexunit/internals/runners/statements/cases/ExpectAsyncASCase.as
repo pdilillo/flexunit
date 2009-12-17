@@ -95,7 +95,7 @@ package org.flexunit.internals.runners.statements.cases
 		
 		protected function handleTimeout( data : Object = null ) : void
 		{
-			//do nothing
+			//no op
 		}
 		
 	}

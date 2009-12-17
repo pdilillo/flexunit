@@ -1,8 +1,9 @@
 package org.flexunit.runner.manipulation.cases
 {
 	import org.flexunit.Assert;
-	import org.flexunit.runner.IDescription;
 	import org.flexunit.runner.Description;
+	import org.flexunit.runner.IDescription;
+	import org.flexunit.runner.manipulation.Filter;
 	import org.flexunit.runner.manipulation.filters.DynamicFilter;
 	import org.flexunit.runner.manipulation.filters.IncludeAllFilter;
 	import org.flexunit.runner.manipulation.mocks.BasicFilterMock;
@@ -35,13 +36,13 @@ package org.flexunit.runner.manipulation.cases
 			basicFilterMock.mock.verify();
 		}
 		
-/*		[Test(description="Ensure that the filter is correctly instantiated with a shouldRun and describe function")]
+		[Test(description="Ensure that the filter is correctly instantiated with a shouldRun and describe function")]
 		public function createFilterShouldRunAndDescribeTest():void {
 			var filter:Filter = new Filter(shouldRunTest, describeTest);
 			
 			Assert.assertEquals( shouldRunTest, filter.shouldRun);
 			Assert.assertEquals( describeTest, filter.describe);
-		}*/
+		}
 		
 		//TODO: How would a negative case be created for an object that does not implement IFilterable?
 		[Ignore("This test needs to be revisited")]

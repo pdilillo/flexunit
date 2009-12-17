@@ -39,9 +39,8 @@ package org.flexunit.internals.builders.cases
 			runnerBuilderMock.mock.verify();
 		}
 		
-		[Ignore(description="This will need to be moved elsewhere, since it should actually be testing for no class path as the first argument to the annotation.")]
-		[Test(description="Ensure that the runnerForClass function fails if the klass has 'RunWith' metadata and the class path for the runner is not included as the first argument to the annotation.",
-			expects="org.flexunit.internals.runners.InitializationError")]
+		
+		[Test(description="Ensure that the runnerForClass function fails if the klass has 'RunWith' metadata and the class path for the runner is not included as the first argument to the annotation.")]
 		public function runnerForClassIRunnerTestFail():void {
 			metaDataBuilder.runnerForClass(FlexUnit4SuiteClassFail);
 		}

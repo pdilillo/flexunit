@@ -54,7 +54,7 @@ package flex.lang.reflect.cases
 			
 		}
 		
-		//TODO: will fail currently until the method for defaultArgument changes
+		//TODO: will fail currently until the method for defaultArgument changes to not return simple the [0] item, needs to find the first item without a "key" value in it's XML.
 		[Ignore]
 		[Test(description="Constructs a MetaDataAnnotation and verifies that the defaultArgument returned has the key of async.")]
 		public function checkDefaultArgumentGetCorrectly() : void
