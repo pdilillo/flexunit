@@ -1,155 +1,158 @@
 package org.fluint.uiImpersonation.cases
 {
-	import mx.containers.HBox;
-	import mx.controls.TextInput;
+	import flash.display.Sprite;
 	
-	import org.flexunit.Assert;
-	import org.flexunit.asserts.assertTrue;
+	import mx.core.UIComponent;
+	
+	import org.flexunit.asserts.assertEquals;
 	import org.fluint.uiImpersonation.UIImpersonator;
 
 	public class UIImpersonatorCase
 	{
-		//TODO: These tests and this test case need to be implemented
+		//We need to figure out a way to support both Flex use cases.. 
+		//UIComponents and lower level sprites gracefully... today it isn't graceful 
+		private var uiComponent0:UIComponent;
+		private var uiComponent1:UIComponent;
+		private var uiComponent2:UIComponent;
+
 		[Before]
-		public function setup() : void
-		{
-			
+		public function createSprites():void {
+			uiComponent0 = new UIComponent();
+			uiComponent1 = new UIComponent();
+			uiComponent2 = new UIComponent();
 		}
 		
 		[After]
-		public function teardown() : void
-		{
+		public function cleanupAndDestroy():void {
 			UIImpersonator.removeAllChildren();
+
+			uiComponent0 = null;
+			uiComponent1 = null;
+			uiComponent2 = null;
+
 		}
 		
-		[Test(ui, description="")]
-		public function getNumChildrenTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			var testVisualObj2 : TextInput = new TextInput();
-			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-			UIImpersonator.addChild( testVisualObj2);
-			
-			Assert.assertTrue( UIImpersonator.numChildren == 3  );
-		}
-		
-		[Test(ui,description="Ensure adding a child to the UIImpersonator and making sure we get it back.")]
+		[Test(description="")]
 		public function addChildTest():void {
-			var testVisualObj : HBox = new HBox();
-			Assert.assertTrue( UIImpersonator.addChild( testVisualObj ) is HBox );
-			Assert.assertTrue( UIImpersonator.numChildren == 1  );
+			var numChildren:int = UIImpersonator.numChildren; 
+			
+			UIImpersonator.addChild( uiComponent0 );
+			
+			assertEquals( numChildren+1, UIImpersonator.numChildren );
 		}
 		
-		[Test(ui,description="Ensure adding a child to a specific index of the UIImpersonator returns that object to you with no errors.")]
+		[Test(description="")]
 		public function addChildAtTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			var testVisualObj2 : TextInput = new TextInput();
+
+			UIImpersonator.addChild( uiComponent1 );
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 ); 
+			//Add at the beginning
+			UIImpersonator.addChildAt( uiComponent2, 0 );
 			
+			assertEquals( 0, UIImpersonator.getChildIndex( uiComponent2 ) );
+			assertEquals( 1, UIImpersonator.getChildIndex( uiComponent1 ) );
 			
-			Assert.assertTrue( UIImpersonator.addChildAt( testVisualObj2, 0 ) is TextInput );
-				Assert.assertTrue( UIImpersonator.numChildren == 3  );
+			//Add in the middle
+			UIImpersonator.addChildAt( uiComponent0, 1 );
+			assertEquals( 1, UIImpersonator.getChildIndex( uiComponent0 ) );
+			assertEquals( 0, UIImpersonator.getChildIndex( uiComponent2 ) );
+			assertEquals( 2, UIImpersonator.getChildIndex( uiComponent1 ) );
 		}
 		
-		[Test(ui,description="Ensure removing a child from the UIImpersonator actually works.")]
+		[Test(description="")]
 		public function removeChildTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-			
-			Assert.assertTrue( UIImpersonator.removeChildAt( 0 ) is HBox );
-					
-			Assert.assertTrue( UIImpersonator.numChildren == 1  );
+
+			assertEquals( 0, UIImpersonator.numChildren );
+
+			UIImpersonator.addChild( uiComponent0 );
+			assertEquals( 1, UIImpersonator.numChildren );
+
+			UIImpersonator.removeChild( uiComponent0 );
+			assertEquals( 0, UIImpersonator.numChildren );
 		}
 		
-		[Test(ui,description="Ensure removing a child from a specific index of the UIImpersonator works and removes the child you expect.")]
+		[Test(description="")]
 		public function removeChildAtTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : TextInput = new TextInput();
+			UIImpersonator.addChild( uiComponent0 );
+			UIImpersonator.addChild( uiComponent1 );
+			UIImpersonator.addChild( uiComponent2 );
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-				
-			Assert.assertTrue( UIImpersonator.removeChildAt( 1 ) is TextInput );
-				
-			Assert.assertTrue( UIImpersonator.numChildren == 1  );
+			assertEquals( 3, UIImpersonator.numChildren );
+			assertEquals( uiComponent1, UIImpersonator.removeChildAt( 1 ) );
+
+			assertEquals( 2, UIImpersonator.numChildren );
+			assertEquals( uiComponent0, UIImpersonator.removeChildAt( 0 ) );
+
+			assertEquals( 1, UIImpersonator.numChildren );
+			assertEquals( uiComponent2, UIImpersonator.removeChildAt( 0 ) );
 		}
 		
-		[Test(ui,description="Ensure removing all children actually removes them and the number of children is zero.")]
+		[Test(description="")]
 		public function removeAllChildrenTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : TextInput = new TextInput();
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-					
+			UIImpersonator.addChild( uiComponent0 );
 			UIImpersonator.removeAllChildren();
-			Assert.assertTrue( UIImpersonator.numChildren == 0  );
+			assertEquals( 0, UIImpersonator.numChildren );
+
+			UIImpersonator.addChild( uiComponent1 );
+			UIImpersonator.addChild( uiComponent2 );
+			UIImpersonator.removeAllChildren();
+			assertEquals( 0, UIImpersonator.numChildren );
 		}
 		
-		[Test(ui,description="Ensure getting a child at a specific index in the UIImpersonator returns the child you would expect.")]
+		[Test(description="")]
 		public function getChildAtTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : TextInput = new TextInput();
-			
-			UIImpersonator.addChild(testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-					
-			Assert.assertTrue( UIImpersonator.getChildAt(0) is HBox  );
+			UIImpersonator.addChild( uiComponent0 );
+			UIImpersonator.addChild( uiComponent1 );
+			UIImpersonator.addChild( uiComponent2 );
+
+			assertEquals( uiComponent0, UIImpersonator.getChildAt( 0 ) );
+			assertEquals( uiComponent1, UIImpersonator.getChildAt( 1 ) );
+			assertEquals( uiComponent2, UIImpersonator.getChildAt( 2 ) );
 		}
 		
-		[Test(ui,description="Ensure getting a child by it's name in the UIImpersonator returns the child you would expect.")]
+		[Test(description="")]
 		public function getChildByNameTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			testVisualObj1.name = "myHBox";
-			var testVisualObj2 : TextInput = new TextInput();
-			testVisualObj2.name = "myTextInput";
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-			UIImpersonator.addChild( testVisualObj2 );
-				
-			Assert.assertTrue( UIImpersonator.getChildByName( "myTextInput" ) is TextInput );
 		}
 		
-		[Test(ui,description="Ensure getting the child Index on the UIImpersonator returns the child Index you would expect.")]
+		[Test(description="")]
 		public function getChildIndexTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			testVisualObj1.name = "myHBox";
-			var testVisualObj2 : TextInput = new TextInput();
-			testVisualObj2.name = "myTextInput";
+			UIImpersonator.addChild( uiComponent0 );
+			UIImpersonator.addChild( uiComponent1 );
+			UIImpersonator.addChild( uiComponent2 );
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-			UIImpersonator.addChild( testVisualObj2 );
-			
-			Assert.assertTrue( UIImpersonator.getChildIndex( testVisualObj1 ) == 1 );
+			assertEquals( 0, UIImpersonator.getChildIndex( uiComponent0 ) );
+			assertEquals( 1, UIImpersonator.getChildIndex( uiComponent1 ) );
+			assertEquals( 2, UIImpersonator.getChildIndex( uiComponent2 ) );
 		}
 		
-		[Test(ui,description="Ensure setting the child Index on the UIImpersonator moves the child to the index specified.")]
+		[Test(description="")]
 		public function setChildIndexTest():void {
-			var testVisualObj : HBox = new HBox();
-			var testVisualObj1 : HBox = new HBox();
-			testVisualObj1.name = "myHBox";
-			var testVisualObj2 : TextInput = new TextInput();
-			testVisualObj2.name = "myTextInput";
+			UIImpersonator.addChild( uiComponent0 );
+			UIImpersonator.addChild( uiComponent1 );
+			UIImpersonator.addChild( uiComponent2 );
 			
-			UIImpersonator.addChild( testVisualObj );
-			UIImpersonator.addChild( testVisualObj1 );
-			UIImpersonator.addChild( testVisualObj2 );
+			UIImpersonator.setChildIndex( uiComponent0, 1 );
 			
-			UIImpersonator.setChildIndex( testVisualObj2, 0 );
-			Assert.assertTrue( UIImpersonator.getChildIndex( testVisualObj2 ) == 0 );
+			assertEquals( 1, UIImpersonator.getChildIndex( uiComponent0 ) );
+			assertEquals( 0, UIImpersonator.getChildIndex( uiComponent1 ) );
+			assertEquals( 2, UIImpersonator.getChildIndex( uiComponent2 ) );
 		}
 		
+		[Test(description="")]
+		public function getNumChildrenTest():void {
+
+			assertEquals( 0, UIImpersonator.numChildren );
+
+			UIImpersonator.addChild( uiComponent0 );
+			assertEquals( 1, UIImpersonator.numChildren );
+			
+			UIImpersonator.addChild( uiComponent1 );
+			assertEquals( 2, UIImpersonator.numChildren );
+
+			UIImpersonator.addChild( uiComponent2 );
+			assertEquals( 3, UIImpersonator.numChildren );
+		}
 	}
 }

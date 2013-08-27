@@ -26,6 +26,7 @@
  * @version    
  **/ 
 package org.flexunit.runners {
+	import org.flexunit.constants.AnnotationConstants;
 	import org.flexunit.internals.AssumptionViolatedException;
 	import org.flexunit.internals.namespaces.classInternal;
 	import org.flexunit.internals.runners.ChildRunnerSequencer;
@@ -43,6 +44,7 @@ package org.flexunit.runners {
 	import org.flexunit.runner.manipulation.ISortable;
 	import org.flexunit.runner.manipulation.ISorter;
 	import org.flexunit.runner.manipulation.NoTestsRemainException;
+	import org.flexunit.runner.manipulation.OrderArgumentPlusInheritanceSorter;
 	import org.flexunit.runner.manipulation.OrderArgumentSorter;
 	import org.flexunit.runner.notification.IRunNotifier;
 	import org.flexunit.runner.notification.StoppedByUserException;
@@ -53,6 +55,9 @@ package org.flexunit.runners {
 	import org.flexunit.token.IAsyncTestToken;
 	import org.flexunit.utils.ClassNameUtil;
 	
+	/**
+	 * use the classInternal namespace 
+	 */
 	use namespace classInternal;
 
 	/**
@@ -93,7 +98,7 @@ package org.flexunit.runners {
 		/**
 		 * @private
 		 */
-		private var sorter:ISorter = OrderArgumentSorter.ORDER_ARG_SORTER;
+		protected var sorter:ISorter = OrderArgumentPlusInheritanceSorter.DEFAULT_SORTER;
 		/**
 		 * @private
 		 */
@@ -107,6 +112,11 @@ package org.flexunit.runners {
 		 * @private
 		 */
 		private var cachedDescription:IDescription;
+		
+		/**
+		 * private 
+		 */
+		protected var stopRequested:Boolean = false;
 		
 		/**
 		 * Constructs a new <code>ParentRunner</code> that will run <code>TestClass</code>.
@@ -136,28 +146,41 @@ package org.flexunit.runners {
 		protected function get testClass():TestClass {
 			return _testClass;
 		}
-		
+
 		/**
-		 * Retruns an <code>IDescription</code> of the test class that the runner is running.
+		 * Returns an <code>IDescription</code> of the test class that the runner is running.
+		 */
+		protected function generateDescription():IDescription {
+			var description:IDescription = Description.createSuiteDescription( name, testClass.metadata );
+			var filtered:Array = getFilteredChildren();
+			var child:*;
+			
+			for ( var i:int=0; i<filtered.length; i++ ) {
+				child = filtered[ i ];
+				description.addChild( describeChild( child ) );
+			}
+			
+			return description;			
+		}
+
+		/**
+		 * Returns an <code>IDescription</code> of the test class that the runner is running, caching it.
 		 */
 		public function get description():IDescription {
 			
 			if( !cachedDescription ) {
-				//TODO: Have an issue here, this is trying to use a createSuiteDescription which needs metadata
-				//this might be an issue here as I am now passing metaData through all of the time.. not sure if anyone was counting on a null
-				var description:IDescription = Description.createSuiteDescription( name, testClass.metadata ); //?testClass.metadata[ 0 ]:null );
-				var filtered:Array = getFilteredChildren();
-				var child:*;
-	
-				for ( var i:int=0; i<filtered.length; i++ ) {
-					child = filtered[ i ];
-					description.addChild( describeChild( child ) );
-				}
-				
-				cachedDescription = description;
+				cachedDescription = generateDescription();
 			}
 
 			return cachedDescription;
+		}
+
+		/**
+		 * Ask that the tests run stop before starting the next test. Phrased politely because
+		 * the test currently running will not be interrupted. 
+		 */
+		public function pleaseStop():void {
+			stopRequested = true;
 		}
 
 		/**
@@ -190,7 +213,10 @@ package org.flexunit.runners {
 		 * @param childRunnerToken The token used to keep track of the <code>child</code>'s execution.
 		 */
 		protected function runChild( child:*, notifier:IRunNotifier, childRunnerToken:AsyncTestToken ):void {
-		
+			//runChild needs to check if a stop is requested before proceeding
+			if ( !stopRequested ) {
+				
+			}		
 		}
 
 		/** 
@@ -216,12 +242,28 @@ package org.flexunit.runners {
 		 * @see #runChild()
 		 */
 		protected function classBlock( notifier:IRunNotifier ):IAsyncStatement {
-			var sequencer:StatementSequencer = new StatementSequencer();
+			var sequencer:StatementSequencer;
 			
-			sequencer.addStep( withBeforeClasses() );
-			sequencer.addStep( childrenInvoker( notifier ) );
-			sequencer.addStep( withAfterClasses() );
+			var beforeClassStatement:IAsyncStatement = withBeforeClasses();
+			var afterClassStatement:IAsyncStatement = withAfterClasses();
+			var childrenInvokerStatement:IAsyncStatement = childrenInvoker( notifier );
 			
+			if ( !( beforeClassStatement || afterClassStatement ) ) {
+				return childrenInvokerStatement;
+			} else {
+				sequencer = new StatementSequencer();
+				
+				if ( beforeClassStatement ) {
+					sequencer.addStep( beforeClassStatement );	
+				}
+				
+				sequencer.addStep( childrenInvokerStatement );
+				
+				if ( afterClassStatement ) {
+					sequencer.addStep( afterClassStatement );
+				}
+			}
+
 			return sequencer;
 		}
 
@@ -233,11 +275,19 @@ package org.flexunit.runners {
 		 * @return an <code>IAsyncStatement</code> containing methdos to run before the class.
 		 */
 		protected function withBeforeClasses():IAsyncStatement {
-			var befores:Array = testClass.getMetaDataMethods( "BeforeClass" );
-			//Sort the befores array
-			befores.sort(compare);
-			//this is a deviation from the java approach as we don't have the same type of method information
-			var statement:IAsyncStatement = new RunBeforesClass( befores, testClass );
+			var statement:IAsyncStatement;			
+			var befores:Array = testClass.getMetaDataMethods( AnnotationConstants.BEFORE_CLASS );
+			
+			if ( befores.length ) {
+				
+				if ( befores.length > 1 ) {
+					//Sort the befores array
+					befores.sort(compare);
+				}
+
+				statement = new RunBeforesClass( befores, testClass );
+			}
+
 			return statement;
 		}
 
@@ -251,10 +301,19 @@ package org.flexunit.runners {
 		 * @return an <code>IAsyncStatement</code> containing methods to run after the class.
 		 */
 		protected function withAfterClasses():IAsyncStatement {
-			var afters:Array = testClass.getMetaDataMethods( "AfterClass" );
-			//Sort the afters array
-			afters.sort(compare);
-			var statement:IAsyncStatement = new RunAftersClass( afters, testClass );
+			var statement:IAsyncStatement;
+			var afters:Array = testClass.getMetaDataMethods( AnnotationConstants.AFTER_CLASS );
+			
+			if ( afters.length ) {
+				
+				if ( afters.length > 1 ) {
+					//Sort the afters array
+					afters.sort(compare);
+				}
+
+				statement = new RunAftersClass( afters, testClass );
+			}
+
 			return statement;
 		}		
 		
@@ -282,8 +341,8 @@ package org.flexunit.runners {
 		 * @see #testClass()
 		 */
 		protected function collectInitializationErrors( errors:Array ):void {
-			validatePublicVoidNoArgMethods( "BeforeClass", true, errors );
-			validatePublicVoidNoArgMethods( "AfterClass", true, errors );
+			validatePublicVoidNoArgMethods( AnnotationConstants.BEFORE_CLASS, true, errors );
+			validatePublicVoidNoArgMethods( AnnotationConstants.AFTER_CLASS, true, errors );
 		}
 
 		/**
@@ -341,9 +400,11 @@ package org.flexunit.runners {
 			if(!childrenFiltered) {
 				var filtered:Array = new Array();
 				var child:*;
+				var theChildren:Array = children;
+				var length:uint = theChildren.length;
 	
-				for ( var i:int=0; i<children.length; i++ ) {
-					child = children[ i ];
+				for ( var i:uint=0; i<length; i++ ) {
+					child = theChildren[ i ];
 					//Determine if the child matches the filter
 					if ( shouldRun( child ) ) {
 						try {
@@ -402,6 +463,12 @@ package org.flexunit.runners {
 		 * @throws org.flexunit.runner.notification.StoppedByUserException The user has stopped the test run.
 		 */
 		public function run( notifier:IRunNotifier, previousToken:IAsyncTestToken ):void {
+
+			if ( stopRequested ) {
+				previousToken.sendResult( new StoppedByUserException() );
+				return;
+			}
+
 			var testNotifier:EachTestNotifier = new EachTestNotifier(notifier, description );
 			var resendError:Error;
 			
@@ -443,7 +510,8 @@ package org.flexunit.runners {
 			if ( error is AssumptionViolatedException ) {
 				eachNotifier.fireTestIgnored();
 			} else if ( error is StoppedByUserException ) {
-				throw error;
+				//We are done.. the user cancelled the run
+				eachNotifier.fireTestFinished();
 			} else if ( error ) {
 				eachNotifier.addFailure( error );
 			}
@@ -517,7 +585,7 @@ package org.flexunit.runners {
 			//Determine if the runner has already specified a ISorter besides the default META Sorter,
 			//if it has, ignore the new ISorter.  This is to prevent a potential problem with a parent Runner
 			//overwriting a child's non-default ISorter.
-			if(OrderArgumentSorter.ORDER_ARG_SORTER == this.sorter) {
+			if( OrderArgumentPlusInheritanceSorter.DEFAULT_SORTER == this.sorter ) {
 				this.sorter = sorter;
 				childrenFiltered = false;
 			}

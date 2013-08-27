@@ -4,63 +4,67 @@ package flexUnitTests.flexUnit4.suites.frameworkSuite.cases
 
 	public class TestBeforeAfterInheritance extends TestBeforeAfterInheritanceBaseClass
 	{
-		
-		//Tests in this class plus the tests in the parent class will be run in the order given to them
-		//If the order matches they'll be assigned a random order with that order group, 
-		//unless OrderArgumentPlusAlphaSorter is used instead of the default Sorter
+		public static var setupOrderArray:Array = new Array();
+
 		[Before(order=1)]
 		public function beginOne():void {
-			orderBeforeCheckArray = new Array();
-			orderBeforeCheckArray.push("beginChildOne");
+			setupOrderArray.push("third");
+		}
+		
+		[Before(order=2)]
+		public function beginTwo():void {
+			setupOrderArray.push("fourth");
 		}
 		
 		[Before(order=3)]
-		public function beginTwo():void {
-			if( orderBeforeCheckArray.length == 2 )
-				orderBeforeCheckArray.push("beginChildTwo");
-			else
-				Assert.fail("method ordering is incorrect");
-		}
-		
-		[Before(order=5)]
 		public function beginThree():void {
-			if( orderBeforeCheckArray.length == 4 )
-				orderBeforeCheckArray.push("beginChildThree");
-			else
-				Assert.fail("method ordering is incorrect");
+			setupOrderArray.push("fifth");
 		}
 		
+		//This depends on the test order also working, so we should always run this test after the method order has been verified
 		[Test(order=1)]
 		public function checkingBeforeOrder() : void {
-			Assert.assertEquals( orderBeforeCheckArray.length, 6 );
+			//4 begins
+			if ( setupOrderArray.length == 5 ) {
+				Assert.assertEquals( setupOrderArray[ 0 ], "first" );
+				Assert.assertEquals( setupOrderArray[ 1 ], "second" );
+				Assert.assertEquals( setupOrderArray[ 2 ], "third" );
+				Assert.assertEquals( setupOrderArray[ 3 ], "fourth" );
+				Assert.assertEquals( setupOrderArray[ 4 ], "fifth" );
+			} else {
+				Assert.fail("Incorrect number of begin calls");
+			}
 		}
 		
 		[Test(order=2)]
 		public function checkingAfterOrder() : void {
-			//checking the results from the [After]s from the previous test
-			Assert.assertEquals( orderAfterCheckArray.length, 6 );
+			//5 begins
+			//5 afters
+			//5 more begins
+			if ( setupOrderArray.length == 15 ) {
+				Assert.assertEquals( setupOrderArray[ 5 ], "sixth" );
+				Assert.assertEquals( setupOrderArray[ 6 ], "seventh" );
+				Assert.assertEquals( setupOrderArray[ 7 ], "eight" );
+				Assert.assertEquals( setupOrderArray[ 8 ], "nineth" );
+				Assert.assertEquals( setupOrderArray[ 9 ], "tenth" );
+			} else {
+				Assert.fail("Incorrect number of after calls");
+			}
 		}
 
 		[After(order=1)]
 		public function afterOne():void {
-			orderAfterCheckArray = new Array();
-			orderAfterCheckArray.push("afterChildOne");
+			setupOrderArray.push("sixth");
 		}
 		
-		[After(order=3)]
+		[After(order=2)]
 		public function afterTwo():void {
-			if( orderAfterCheckArray.length == 2 )
-				orderAfterCheckArray.push("afterChildTwo");
-			else
-				Assert.fail("method ordering is incorrect");
+			setupOrderArray.push("seventh");
 		}
 
-		[After(order=5)]
+		[After(order=3)]
 		public function afterThree():void {
-			if( orderAfterCheckArray.length == 4 )
-				orderAfterCheckArray.push("afterChildThree");
-			else
-				Assert.fail("method ordering is incorrect");
+			setupOrderArray.push("eight");
 		}
 
 	}
